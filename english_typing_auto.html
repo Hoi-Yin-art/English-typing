@@ -1,0 +1,1288 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>English Typing : 打字練習</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Inter & JetBrains Mono -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    colors: {
+                        darkBg: '#111317',
+                        darkCard: '#191c22',
+                        darkBorder: '#282c34',
+                        accent: {
+                            DEFAULT: '#eab308', // Monkeytype-inspired amber/gold
+                            hover: '#ca8a04',
+                            glow: 'rgba(234, 179, 8, 0.25)'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* Custom Smooth Caret & Typing Styles */
+        body {
+            transition: background-color 0.25s ease, color 0.25s ease;
+        }
+
+        .typing-area {
+            font-family: 'JetBrains Mono', monospace;
+            line-height: 1.85;
+            letter-spacing: 0.02em;
+            user-select: none;
+            position: relative;
+        }
+
+        .char {
+            position: relative;
+            transition: color 0.08s ease, background-color 0.08s ease;
+            border-radius: 3px;
+            padding: 1px 0;
+        }
+
+        /* Untyped character */
+        .dark .char-untyped { color: #646a77; }
+        .char-untyped { color: #9ca3af; }
+
+        /* Correct character */
+        .dark .char-correct { color: #e2e8f0; }
+        .char-correct { color: #273243; }
+
+        /* Correct in Code mode highlights subtly */
+        .dark .code-mode .char-correct { color: #4ade80; }
+        .code-mode .char-correct { color: #16a34a; }
+
+        /* Incorrect character */
+        .char-incorrect {
+            color: #ef4444 !important;
+            background-color: rgba(239, 68, 68, 0.18);
+            text-decoration: underline wavy #ef4444;
+            text-underline-offset: 4px;
+        }
+
+        /* Active Smooth Caret */
+        #smooth-caret {
+            position: absolute;
+            width: 2.5px;
+            background-color: #eab308;
+            border-radius: 2px;
+            pointer-events: none;
+            transition: transform 0.09s cubic-bezier(0.2, 0.8, 0.2, 1), height 0.1s ease;
+            box-shadow: 0 0 8px rgba(234, 179, 8, 0.6);
+            z-index: 10;
+        }
+
+        .caret-blink {
+            animation: blink 1s infinite;
+        }
+
+        @keyframes blink {
+            0%, 49% { opacity: 1; }
+            50%, 100% { opacity: 0; }
+        }
+
+        /* Custom Range Slider */
+        input[type=range] {
+            background: transparent;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 16px;
+            width: 16px;
+            border-radius: 50%;
+            background: #ffbf00;
+            cursor: pointer;
+            margin-top: -6px;
+            box-shadow: 0 0 6px rgba(234, 179, 8, 0.5);
+            transition: transform 0.15s ease;
+        }
+        input[type=range]::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
+        }
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 4px;
+            cursor: pointer;
+            background: #374151;
+            border-radius: 2px;
+        }
+        html:not(.dark) input[type=range]::-webkit-slider-runnable-track {
+            background: #cbd5e1;
+        }
+
+        /* Subtle scrollbars */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(156, 163, 175, 0.3);
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 dark:bg-darkBg dark:text-slate-200 min-h-screen flex flex-col justify-between selection:bg-yellow-500/30">
+
+    <!-- Top Navigation Bar -->
+    <header class="w-full max-w-6xl mx-auto px-4 sm:px-6 pt-6 pb-4 flex flex-wrap items-center justify-between gap-4">
+        <!-- Brand Logo -->
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-yellow-500/15 border border-yellow-500/30 flex items-center justify-center text-yellow-500 shadow-sm">
+                <!-- Keyboard Icon SVG -->
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="2" y="4" width="20" height="16" rx="2" ry="2"></rect>
+                    <path d="M6 8h.001"></path><path d="M10 8h.001"></path><path d="M14 8h.001"></path><path d="M18 8h.001"></path>
+                    <path d="M8 12h.001"></path><path d="M12 12h.001"></path><path d="M16 12h.001"></path>
+                    <path d="M7 16h10"></path>
+                </svg>
+            </div>
+            <div>
+                <div class="flex items-center gap-2">
+                    <h1 class="text-xl sm:text-2xl font-bold tracking-tight font-mono">
+                        English typing <span class="text-yellow-500"></span>
+                    </h1>
+                    <span class="hidden sm:inline-block text-xs px-2 py-0.5 rounded-full bg-slate-200 dark:bg-darkCard text-slate-600 dark:text-slate-400 font-medium">
+                        打字練習
+                    </span>
+                </div>
+                <p class="text-xs text-slate-500 dark:text-slate-400"></p>
+            </div>
+        </div>
+
+        <!-- Global Utility Toggles (Sound, Auto-Next, Theme) -->
+        <div class="flex items-center gap-2 sm:gap-3">
+            <!-- Auto-Next Toggle -->
+            <button id="btn-auto-next" title="Auto-Next: Automatically load next test upon completion (自動切換下一題)"
+                class="flex items-center gap-2 px-3 py-2 rounded-xl text-xs sm:text-sm font-medium border transition-all duration-200 bg-white dark:bg-darkCard border-slate-200 dark:border-darkBorder hover:border-yellow-500/50">
+                <span id="auto-next-dot" class="w-2 h-2 rounded-full bg-slate-400 transition-colors"></span>
+                <span>Auto-Next</span>
+                <span class="hidden md:inline text-[11px] opacity-60">(自動續練)</span>
+            </button>
+
+            <!-- Sound Toggle -->
+            <button id="btn-sound" title="Mechanical Key Sound Effects (按鍵音效)"
+                class="p-2.5 rounded-xl border bg-white dark:bg-darkCard border-slate-200 dark:border-darkBorder text-yellow-500 hover:border-yellow-500/50 transition-all" aria-label="Toggle Sound">
+                <!-- Sound On SVG -->
+                <svg id="icon-sound-on" xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                    <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+                    <path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>
+                </svg>
+                <!-- Sound Off SVG -->
+                <svg id="icon-sound-off" xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 hidden text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                    <line x1="23" y1="9" x2="17" y2="15"></line>
+                    <line x1="17" y1="9" x2="23" y2="15"></line>
+                </svg>
+            </button>
+
+            <!-- Theme Toggle -->
+            <button id="btn-theme" title="Toggle Dark/Light Theme (切換深淺主題)"
+                class="p-2.5 rounded-xl border bg-white dark:bg-darkCard border-slate-200 dark:border-darkBorder text-slate-600 dark:text-slate-300 hover:border-yellow-500/50 transition-all" aria-label="Toggle Theme">
+                <svg id="icon-sun" xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 hidden dark:block text-yellow-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="5"></circle>
+                    <line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line>
+                    <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                    <line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line>
+                    <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                </svg>
+                <svg id="icon-moon" xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 block dark:hidden text-slate-700" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                </svg>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Content Container -->
+    <main class="w-full max-w-5xl mx-auto px-4 sm:px-6 flex-1 flex flex-col justify-center gap-6 my-4">
+
+        <!-- Configuration & Auto-Type Control Bar -->
+        <section class="bg-white dark:bg-darkCard border border-slate-200 dark:border-darkBorder rounded-2xl p-3 sm:p-4 shadow-sm flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4">
+            
+            <!-- Left: Category Selector -->
+            <div class="flex flex-wrap items-center gap-1.5 bg-slate-100 dark:bg-darkBg p-1.5 rounded-xl">
+                <button data-category="words" class="cat-btn active px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all bg-yellow-500 text-slate-950 shadow-sm">
+                    Words <span class="opacity-75 text-[11px]">單字</span>
+                </button>
+            </div>
+
+            <!-- Middle: Mode & Length/Time Options -->
+            <div class="flex flex-wrap items-center justify-between sm:justify-start gap-2 bg-slate-100 dark:bg-darkBg p-1.5 rounded-xl">
+                <div class="flex items-center gap-1 border-r border-slate-300 dark:border-slate-700 pr-2 mr-1">
+                    <button data-mode="time" class="mode-type-btn px-2.5 py-1 rounded-lg text-xs font-semibold text-yellow-500 bg-yellow-500/10">
+                        時間
+                    </button>
+                    <button data-mode="words" class="mode-type-btn px-2.5 py-1 rounded-lg text-xs font-semibold text-slate-500 hover:text-slate-800 dark:hover:text-slate-200">
+                        長度
+                    </button>
+                </div>
+                <div id="sub-options" class="flex items-center gap-1">
+                    <!-- Populated dynamically via JS (15s, 30s, 60s or 15, 30, 50) -->
+                </div>
+            </div>
+
+            <!-- Right: Prominent AUTO TYPE Mode Control -->
+            <div class="flex flex-wrap items-center justify-between sm:justify-end gap-3 bg-yellow-500/10 border border-yellow-500/30 px-3.5 py-2 rounded-xl">
+                <button id="btn-auto-type" class="flex items-center gap-2 text-xs sm:text-sm font-bold text-yellow-600 dark:text-yellow-400 hover:opacity-80 transition">
+                    <span id="auto-bot-indicator" class="relative flex h-2.5 w-2.5">
+                        <span id="auto-bot-ping" class="hidden animate-ping absolute inline-flex h-full w-full rounded-full bg-yellow-400 opacity-75"></span>
+                        <span id="auto-bot-dot" class="relative inline-flex rounded-full h-2.5 w-2.5 bg-slate-400"></span>
+                    </span>
+                    <span>AUTO TYPE</span>
+                    <span class="text-[11px] font-normal opacity-80">(自動打字)</span>
+                </button>
+
+                <!-- Auto Speed Slider -->
+                <div class="flex items-center gap-2 pl-2 border-l border-yellow-500/20">
+                    <input id="auto-wpm-slider" type="range" min="30" max="220" step="5" value="85" class="w-20 sm:w-24" title="Adjust Auto-Type Speed (調整自動打字速度)">
+                    <span class="font-mono text-xs font-semibold text-yellow-600 dark:text-yellow-400 min-w-[58px] text-right">
+                        <span id="auto-wpm-label">85</span> WPM
+                    </span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Live Telemetry / Metrics Bar -->
+        <section class="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+            <!-- WPM -->
+            <div class="bg-white dark:bg-darkCard border border-slate-200 dark:border-darkBorder rounded-2xl p-4 flex flex-col justify-between">
+                <div class="flex items-center justify-between text-xs font-medium text-slate-500 dark:text-slate-400">
+                    <span>WPM (速度)</span>
+                    <span id="badge-live-mode" class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-slate-100 dark:bg-darkBg text-slate-500">Manual</span>
+                </div>
+                <div id="metric-wpm" class="text-3xl sm:text-4xl font-bold font-mono text-yellow-500 mt-1">0</div>
+            </div>
+
+            <!-- Accuracy -->
+            <div class="bg-white dark:bg-darkCard border border-slate-200 dark:border-darkBorder rounded-2xl p-4 flex flex-col justify-between">
+                <span class="text-xs font-medium text-slate-500 dark:text-slate-400">ACCURACY (準確率)</span>
+                <div class="flex items-baseline gap-1 mt-1">
+                    <span id="metric-acc" class="text-3xl sm:text-4xl font-bold font-mono text-emerald-500">100</span>
+                    <span class="text-lg font-mono text-emerald-500/80">%</span>
+                </div>
+            </div>
+
+            <!-- Timer / Remaining -->
+            <div class="bg-white dark:bg-darkCard border border-slate-200 dark:border-darkBorder rounded-2xl p-4 flex flex-col justify-between">
+                <span id="metric-timer-title" class="text-xs font-medium text-slate-500 dark:text-slate-400">TIME LEFT (剩餘時間)</span>
+                <div class="flex items-baseline gap-1 mt-1">
+                    <span id="metric-timer" class="text-3xl sm:text-4xl font-bold font-mono">30</span>
+                    <span id="metric-timer-unit" class="text-sm font-mono text-slate-400">s</span>
+                </div>
+            </div>
+
+            <!-- Characters / Errors -->
+            <div class="bg-white dark:bg-darkCard border border-slate-200 dark:border-darkBorder rounded-2xl p-4 flex flex-col justify-between">
+                <span class="text-xs font-medium text-slate-500 dark:text-slate-400">CHARS / ERRORS (字數/錯誤)</span>
+                <div class="flex items-baseline gap-2 mt-1 font-mono">
+                    <span id="metric-chars" class="text-2xl sm:text-3xl font-bold">0</span>
+                    <span class="text-slate-400">/</span>
+                    <span id="metric-errors" class="text-xl sm:text-2xl font-semibold text-rose-500">0</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Main Typing Card -->
+        <section id="typing-container" class="relative bg-white dark:bg-darkCard border-2 border-slate-200 dark:border-darkBorder focus-within:border-yellow-500/70 rounded-2xl p-6 sm:p-8 shadow-lg transition-colors cursor-text min-h-[230px] flex flex-col justify-between">
+            
+            <!-- Progress Bar at top edge -->
+            <div class="absolute top-0 left-0 right-0 h-1.5 bg-slate-100 dark:bg-darkBg rounded-t-2xl overflow-hidden">
+                <div id="progress-bar" class="h-full bg-yellow-500 transition-all duration-150 ease-out" style="width: 0%"></div>
+            </div>
+
+            <!-- Hidden Input to capture keystrokes reliably on desktop & mobile -->
+            <input id="hidden-input" type="text" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
+                class="opacity-0 absolute inset-0 w-full h-full cursor-text z-20" aria-label="Typing input field" />
+
+            <!-- Blur Overlay when unfocused -->
+            <div id="focus-overlay" class="hidden absolute inset-0 z-30 bg-white/80 dark:bg-darkCard/85 backdrop-blur-sm rounded-2xl flex flex-col items-center justify-center gap-2 cursor-pointer transition-opacity">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 text-yellow-500 animate-bounce" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 19V5M5 12l7-7 7 7"/>
+                </svg>
+                <p class="text-base sm:text-lg font-semibold">Click here or press any key to focus</p>
+                <p class="text-xs text-slate-500 dark:text-slate-400">點擊此處或按任意鍵開始打字練習</p>
+            </div>
+
+            <!-- Code Snippet Language Pill (Visible in Code Mode) -->
+            <div id="snippet-tag-bar" class="hidden mb-3 flex items-center justify-between">
+                <span id="snippet-lang-badge" class="px-2.5 py-0.5 rounded-md text-xs font-mono font-semibold bg-blue-500/15 text-blue-500 border border-blue-500/30">
+                    JavaScript
+                </span>
+                <span class="text-xs text-slate-400 font-mono">Tip: Use Space for spaces, Backspace to fix</span>
+            </div>
+
+            <!-- Text Display Wrapper -->
+            <div id="text-viewport" class="relative overflow-hidden max-h-[210px] py-1">
+                <!-- Smooth Moving Caret -->
+                <div id="smooth-caret" class="caret-blink" style="height: 28px; transform: translate(0px, 4px);"></div>
+                <!-- Rendered Spans -->
+                <div id="words-display" class="typing-area text-xl sm:text-2xl md:text-[26px] break-words"></div>
+            </div>
+
+            <!-- Bottom Action Hints & Quick Controls -->
+            <div class="mt-6 pt-4 border-t border-slate-100 dark:border-darkBorder/70 flex flex-wrap items-center justify-between gap-3 z-30">
+                <div class="flex items-center gap-3 text-xs text-slate-500 dark:text-slate-400">
+                    <span class="inline-flex items-center gap-1">
+                        <kbd class="px-1.5 py-0.5 text-[11px] font-mono bg-slate-100 dark:bg-darkBg border border-slate-300 dark:border-slate-700 rounded">Tab</kbd>
+                        <span>Restart (重新開始)</span>
+                    </span>
+                    <span class="hidden sm:inline-flex items-center gap-1">
+                        <kbd class="px-1.5 py-0.5 text-[11px] font-mono bg-slate-100 dark:bg-darkBg border border-slate-300 dark:border-slate-700 rounded">Esc</kbd>
+                        <span>Stop Auto (停止自動)</span>
+                    </span>
+                </div>
+
+                <div class="flex items-center gap-2">
+                    <button id="btn-restart" type="button" class="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-medium bg-slate-100 dark:bg-darkBg hover:bg-yellow-500 hover:text-slate-950 transition-all">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
+                            <path d="M3 3v5h5"></path>
+                        </svg>
+                        <span>Restart</span>
+                    </button>
+                    <button id="btn-next-passage" type="button" class="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-medium bg-slate-100 dark:bg-darkBg hover:bg-yellow-500 hover:text-slate-950 transition-all">
+                        <span>Next</span>
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="9 18 15 12 9 6"></polyline>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Results Modal Overlay -->
+    <div id="results-modal" class="hidden fixed inset-0 z-50 bg-slate-950/75 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-darkCard border border-slate-200 dark:border-darkBorder rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl transform transition-all">
+            <div class="flex items-center justify-between mb-6">
+                <div>
+                    <span id="result-mode-tag" class="text-xs font-mono uppercase tracking-wider px-2.5 py-1 rounded-full bg-yellow-500/15 text-yellow-500 font-semibold">
+                        Test Complete
+                    </span>
+                    <h2 class="text-2xl font-bold mt-2">Practice Summary <span class="text-base font-normal text-slate-400">練習報告</span></h2>
+                </div>
+                <div class="w-12 h-12 rounded-2xl bg-emerald-500/15 text-emerald-500 flex items-center justify-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                        <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                </div>
+            </div>
+
+            <!-- Stats Grid -->
+            <div class="grid grid-cols-2 gap-4 mb-6">
+                <div class="bg-slate-50 dark:bg-darkBg p-4 rounded-2xl border border-slate-200/60 dark:border-darkBorder">
+                    <div class="text-xs text-slate-500 dark:text-slate-400">Net WPM (淨速度)</div>
+                    <div id="res-wpm" class="text-4xl font-bold font-mono text-yellow-500 mt-1">0</div>
+                </div>
+                <div class="bg-slate-50 dark:bg-darkBg p-4 rounded-2xl border border-slate-200/60 dark:border-darkBorder">
+                    <div class="text-xs text-slate-500 dark:text-slate-400">Accuracy (準確率)</div>
+                    <div id="res-acc" class="text-4xl font-bold font-mono text-emerald-500 mt-1">100%</div>
+                </div>
+                <div class="bg-slate-50 dark:bg-darkBg p-3.5 rounded-2xl border border-slate-200/60 dark:border-darkBorder">
+                    <div class="text-xs text-slate-500 dark:text-slate-400">Raw WPM (原始速度)</div>
+                    <div id="res-raw" class="text-xl font-bold font-mono mt-0.5">0</div>
+                </div>
+                <div class="bg-slate-50 dark:bg-darkBg p-3.5 rounded-2xl border border-slate-200/60 dark:border-darkBorder">
+                    <div class="text-xs text-slate-500 dark:text-slate-400">Chars / Errors (字數/錯誤)</div>
+                    <div id="res-chars" class="text-xl font-bold font-mono mt-0.5">0 / 0</div>
+                </div>
+            </div>
+
+            <!-- Auto-Next Countdown Banner (Shown only when Auto-Next is active) -->
+            <div id="auto-next-banner" class="hidden mb-5 px-4 py-2.5 rounded-xl bg-yellow-500/15 border border-yellow-500/30 text-yellow-600 dark:text-yellow-400 text-xs sm:text-sm flex items-center justify-between">
+                <span>Auto-Next loading next passage in <strong id="auto-next-countdown" class="font-mono text-base">3</strong>s...</span>
+                <button id="btn-cancel-autonext" class="underline font-semibold hover:opacity-80">Cancel</button>
+            </div>
+
+            <!-- Modal Buttons -->
+            <div class="flex items-center gap-3">
+                <button id="btn-modal-restart" class="flex-1 py-3 px-4 rounded-xl font-semibold text-sm border border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-darkBg transition">
+                    Repeat Same (重練本題)
+                </button>
+                <button id="btn-modal-next" class="flex-1 py-3 px-4 rounded-xl font-semibold text-sm bg-yellow-500 text-slate-950 hover:bg-yellow-400 shadow-lg shadow-yellow-500/20 transition">
+                    Next Passage (下一題) →
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="w-full max-w-6xl mx-auto px-4 sm:px-6 py-4 text-center text-xs text-slate-500 dark:text-slate-500 flex flex-col sm:flex-row items-center justify-between gap-2">
+        <div>SYS.STATUS:  <span class="text-yellow-500 font-semibold">ONLINE</span> © 2026 Hoi-Yin art </div>
+    </footer>
+
+    <script>
+        /**
+         * English typing : Auto
+         * Comprehensive Typing Practice & Auto-Pacer Engine
+         */
+
+        // ==========================================
+        // 1. PRACTICE CONTENT BANKS
+        // ==========================================
+        const COMMON_WORDS = [
+            "the", "be", "to", "of", "and", "a", "in", "that", "have", "it",
+            "for", "not", "on", "with", "he", "as", "you", "do", "at", "this",
+            "but", "his", "by", "from", "they", "we", "say", "her", "she", "or",
+            "an", "will", "my", "one", "all", "would", "there", "their", "what",
+            "so", "up", "out", "if", "about", "who", "get", "which", "go", "me",
+            "when", "make", "can", "like", "time", "no", "just", "him", "know",
+            "take", "people", "into", "year", "your", "good", "some", "could",
+            "them", "see", "other", "than", "then", "now", "look", "only", "come",
+            "its", "over", "think", "also", "back", "after", "use", "two", "how",
+            "our", "work", "first", "well", "way", "even", "new", "want", "because",
+            "any", "these", "give", "day", "most", "us", "system", "program", "code",
+            "design", "build", "create", "modern", "screen", "keyboard", "speed",
+            "focus", "accuracy", "practice", "learning", "develop", "simple", "clean"
+        ];
+
+        const ENGLISH_QUOTES = [
+            "The best way to predict the future is to invent it.",
+            "Simplicity is the soul of efficiency. Clean code always looks like it was written by someone who cares.",
+            "First, solve the problem. Then, write the code. Consistency turns small daily practice into mastery.",
+            "Success is the sum of small efforts, repeated day in and day out without losing enthusiasm.",
+            "Programs must be written for people to read, and only incidentally for machines to execute.",
+            "Quality is not an act, it is a habit. Focus on accuracy first and speed will naturally follow.",
+            "Any fool can write code that a computer can understand. Good programmers write code that humans can understand.",
+            "Technology is best when it brings people together and empowers creative problem solving."
+        ];
+
+        const CODE_SNIPPETS = [
+            {
+                lang: "HTML5",
+                code: `<header class="navbar"><nav><a href="#home" class="logo">DevStudio</a><button id="menu-toggle" aria-label="Menu">Start</button></nav></header>`
+            },
+            {
+                lang: "CSS3",
+                code: `.card-container { display: flex; justify-content: space-between; align-items: center; border-radius: 12px; transition: transform 0.2s ease; }`
+            },
+            {
+                lang: "JavaScript (ES6+)",
+                code: `const fetchUsers = async (url) => { try { const res = await fetch(url); return await res.json(); } catch (err) { console.error(err); } };`
+            },
+            {
+                lang: "Java",
+                code: `public class Main { public static void main(String[] args) { System.out.println("Hello, Java Developer!"); int score = 100; } }`
+            },
+            {
+                lang: "Java Stream API",
+                code: `List<String> active = users.stream().filter(u -> u.isActive()).map(User::getName).collect(Collectors.toList());`
+            },
+            {
+                lang: "HTML / CSS Grid",
+                code: `<section class="grid grid-cols-3 gap-4 p-6 bg-slate-900 text-white rounded-xl"><h2>Dashboard</h2></section>`
+            },
+            {
+                lang: "JavaScript DOM",
+                code: `document.querySelector('#submit-btn').addEventListener('click', (event) => { event.preventDefault(); initApp(); });`
+            }
+        ];
+
+        // ==========================================
+        // 2. WEB AUDIO API SYNTHESIZER (Mechanical Clicks)
+        // ==========================================
+        class SoundEngine {
+            constructor() {
+                this.enabled = true;
+                this.ctx = null;
+            }
+
+            init() {
+                if (!this.ctx) {
+                    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                    if (AudioCtx) this.ctx = new AudioCtx();
+                }
+                if (this.ctx && this.ctx.state === 'suspended') {
+                    this.ctx.resume();
+                }
+            }
+
+            playKey(isError = false) {
+                if (!this.enabled) return;
+                this.init();
+                if (!this.ctx) return;
+
+                try {
+                    const now = this.ctx.currentTime;
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+
+                    if (isError) {
+                        // Subtle low thud for typo
+                        osc.type = 'sawtooth';
+                        osc.frequency.setValueAtTime(140, now);
+                        osc.frequency.exponentialRampToValueAtTime(75, now + 0.06);
+                        gain.gain.setValueAtTime(0.08, now);
+                        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.065);
+                    } else {
+                        // Crisp tactile switch click
+                        osc.type = 'triangle';
+                        const baseFreq = 520 + (Math.random() * 80 - 40);
+                        osc.frequency.setValueAtTime(baseFreq, now);
+                        osc.frequency.exponentialRampToValueAtTime(160, now + 0.032);
+                        gain.gain.setValueAtTime(0.065, now);
+                        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.035);
+                    }
+
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start(now);
+                    osc.stop(now + 0.07);
+                } catch (e) {
+                    // Ignore audio autoplay block errors before interaction
+                }
+            }
+
+            playComplete() {
+                if (!this.enabled) return;
+                this.init();
+                if (!this.ctx) return;
+
+                try {
+                    const now = this.ctx.currentTime;
+                    [523.25, 659.25, 783.99].forEach((freq, idx) => {
+                        const osc = this.ctx.createOscillator();
+                        const gain = this.ctx.createGain();
+                        osc.type = 'sine';
+                        osc.frequency.setValueAtTime(freq, now + idx * 0.07);
+                        gain.gain.setValueAtTime(0.06, now + idx * 0.07);
+                        gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.07 + 0.25);
+                        osc.connect(gain);
+                        gain.connect(this.ctx.destination);
+                        osc.start(now + idx * 0.07);
+                        osc.stop(now + idx * 0.07 + 0.26);
+                    });
+                } catch (e) {}
+            }
+        }
+
+        const sound = new SoundEngine();
+
+        // ==========================================
+        // 3. APPLICATION STATE
+        // ==========================================
+        const state = {
+            category: 'words',       // 'words' | 'quotes' | 'code'
+            modeType: 'time',        // 'time' | 'words'
+            timeOption: 30,          // 15, 30, 60
+            wordCountOption: 25,     // 15, 25, 50
+            
+            targetText: '',
+            currentSnippetLang: '',
+            charSpans: [],
+            cursorIndex: 0,
+            typedHistory: [],        // Array of booleans (true = correct, false = wrong)
+            
+            isRunning: false,
+            isFinished: false,
+            startTime: null,
+            timeRemaining: 30,
+            timerInterval: null,
+            
+            totalKeystrokes: 0,
+            correctKeystrokes: 0,
+            errorCount: 0,
+
+            // Auto Features
+            autoTypeActive: false,
+            autoWpm: 85,
+            autoTypeTimer: null,
+            autoNextActive: false,
+            autoNextCountdownTimer: null
+        };
+
+        // ==========================================
+        // 4. DOM REFERENCES
+        // ==========================================
+        const dom = {
+            wordsDisplay: document.getElementById('words-display'),
+            textViewport: document.getElementById('text-viewport'),
+            smoothCaret: document.getElementById('smooth-caret'),
+            hiddenInput: document.getElementById('hidden-input'),
+            focusOverlay: document.getElementById('focus-overlay'),
+            typingContainer: document.getElementById('typing-container'),
+            progressBar: document.getElementById('progress-bar'),
+
+            // Metrics
+            metricWpm: document.getElementById('metric-wpm'),
+            metricAcc: document.getElementById('metric-acc'),
+            metricTimerTitle: document.getElementById('metric-timer-title'),
+            metricTimer: document.getElementById('metric-timer'),
+            metricTimerUnit: document.getElementById('metric-timer-unit'),
+            metricChars: document.getElementById('metric-chars'),
+            metricErrors: document.getElementById('metric-errors'),
+            badgeLiveMode: document.getElementById('badge-live-mode'),
+
+            // Controls
+            catBtns: document.querySelectorAll('.cat-btn'),
+            modeTypeBtns: document.querySelectorAll('.mode-type-btn'),
+            subOptions: document.getElementById('sub-options'),
+            snippetTagBar: document.getElementById('snippet-tag-bar'),
+            snippetLangBadge: document.getElementById('snippet-lang-badge'),
+
+            // Auto Controls
+            btnAutoType: document.getElementById('btn-auto-type'),
+            autoBotDot: document.getElementById('auto-bot-dot'),
+            autoBotPing: document.getElementById('auto-bot-ping'),
+            autoWpmSlider: document.getElementById('auto-wpm-slider'),
+            autoWpmLabel: document.getElementById('auto-wpm-label'),
+            btnAutoNext: document.getElementById('btn-auto-next'),
+            autoNextDot: document.getElementById('auto-next-dot'),
+
+            // Utility Buttons
+            btnSound: document.getElementById('btn-sound'),
+            iconSoundOn: document.getElementById('icon-sound-on'),
+            iconSoundOff: document.getElementById('icon-sound-off'),
+            btnTheme: document.getElementById('btn-theme'),
+            btnRestart: document.getElementById('btn-restart'),
+            btnNextPassage: document.getElementById('btn-next-passage'),
+
+            // Modal
+            resultsModal: document.getElementById('results-modal'),
+            resultModeTag: document.getElementById('result-mode-tag'),
+            resWpm: document.getElementById('res-wpm'),
+            resAcc: document.getElementById('res-acc'),
+            resRaw: document.getElementById('res-raw'),
+            resChars: document.getElementById('res-chars'),
+            autoNextBanner: document.getElementById('auto-next-banner'),
+            autoNextCountdown: document.getElementById('auto-next-countdown'),
+            btnCancelAutonext: document.getElementById('btn-cancel-autonext'),
+            btnModalRestart: document.getElementById('btn-modal-restart'),
+            btnModalNext: document.getElementById('btn-modal-next')
+        };
+
+        // ==========================================
+        // 5. TEXT GENERATION & RENDERING
+        // ==========================================
+        function generatePassage() {
+            const targetWordCount = state.modeType === 'words' ? state.wordCountOption : 45;
+
+            if (state.category === 'words') {
+                dom.snippetTagBar.classList.add('hidden');
+                dom.wordsDisplay.classList.remove('code-mode');
+                const chosen = [];
+                let lastWord = '';
+                for (let i = 0; i < targetWordCount; i++) {
+                    let word;
+                    do {
+                        word = COMMON_WORDS[Math.floor(Math.random() * COMMON_WORDS.length)];
+                    } while (word === lastWord);
+                    lastWord = word;
+                    chosen.push(word);
+                }
+                state.targetText = chosen.join(' ');
+            } else if (state.category === 'quotes') {
+                dom.snippetTagBar.classList.add('hidden');
+                dom.wordsDisplay.classList.remove('code-mode');
+                // Combine quotes if time mode needs more text
+                let pool = [...ENGLISH_QUOTES].sort(() => Math.random() - 0.5);
+                if (state.modeType === 'time') {
+                    state.targetText = pool.slice(0, 3).join(' ');
+                } else {
+                    const words = pool.join(' ').split(' ').slice(0, state.wordCountOption);
+                    state.targetText = words.join(' ');
+                }
+            } else if (state.category === 'code') {
+                dom.snippetTagBar.classList.remove('hidden');
+                dom.wordsDisplay.classList.add('code-mode');
+                const snippetObj = CODE_SNIPPETS[Math.floor(Math.random() * CODE_SNIPPETS.length)];
+                state.currentSnippetLang = snippetObj.lang;
+                dom.snippetLangBadge.textContent = snippetObj.lang;
+                
+                if (state.modeType === 'time' && state.timeOption >= 30) {
+                    const secondSnippet = CODE_SNIPPETS.find(s => s.lang !== snippetObj.lang) || snippetObj;
+                    state.targetText = `${snippetObj.code} ${secondSnippet.code}`;
+                    dom.snippetLangBadge.textContent = `${snippetObj.lang} + ${secondSnippet.lang}`;
+                } else {
+                    state.targetText = snippetObj.code;
+                }
+            }
+        }
+
+        function renderCharacters() {
+            dom.wordsDisplay.innerHTML = '';
+            dom.textViewport.scrollTop = 0;
+            state.charSpans = [];
+
+            const fragment = document.createDocumentFragment();
+            for (let i = 0; i < state.targetText.length; i++) {
+                const span = document.createElement('span');
+                span.textContent = state.targetText[i];
+                span.className = 'char char-untyped';
+                fragment.appendChild(span);
+                state.charSpans.push(span);
+            }
+            dom.wordsDisplay.appendChild(fragment);
+
+            // Position caret on first character after DOM paint
+            requestAnimationFrame(() => updateCaretPosition());
+        }
+
+        function updateCaretPosition() {
+            if (!state.charSpans.length) return;
+
+            const targetSpan = state.charSpans[Math.min(state.cursorIndex, state.charSpans.length - 1)];
+            if (!targetSpan) return;
+
+            const spanRect = targetSpan.getBoundingClientRect();
+            const containerRect = dom.wordsDisplay.getBoundingClientRect();
+
+            let left = spanRect.left - containerRect.left;
+            const top = spanRect.top - containerRect.top + 3;
+
+            // If at the very end of the string, place caret after the last char
+            if (state.cursorIndex >= state.charSpans.length) {
+                left += spanRect.width;
+            }
+
+            dom.smoothCaret.style.height = `${Math.max(22, spanRect.height - 6)}px`;
+            dom.smoothCaret.style.transform = `translate(${left}px, ${top}px)`;
+
+            // Auto-scroll viewport smoothly when typing moves down lines
+            const relativeTop = targetSpan.offsetTop;
+            const viewportHeight = dom.textViewport.clientHeight;
+            if (relativeTop > viewportHeight * 0.55) {
+                dom.textViewport.scrollTo({
+                    top: relativeTop - viewportHeight * 0.35,
+                    behavior: 'smooth'
+                });
+            }
+        }
+
+        // ==========================================
+        // 6. SUB-OPTIONS UI RENDERING
+        // ==========================================
+        function renderSubOptions() {
+            dom.subOptions.innerHTML = '';
+            const options = state.modeType === 'time' ? [15, 30, 60] : [15, 25, 50];
+            const activeVal = state.modeType === 'time' ? state.timeOption : state.wordCountOption;
+
+            options.forEach(val => {
+                const btn = document.createElement('button');
+                const isSelected = val === activeVal;
+                btn.textContent = state.modeType === 'time' ? `${val}s` : `${val}`;
+                btn.className = `px-2.5 py-1 rounded-lg text-xs font-mono font-semibold transition-all ${
+                    isSelected
+                        ? 'bg-yellow-500 text-slate-950 shadow-sm'
+                        : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                }`;
+                btn.addEventListener('click', () => {
+                    if (state.modeType === 'time') {
+                        state.timeOption = val;
+                    } else {
+                        state.wordCountOption = val;
+                    }
+                    renderSubOptions();
+                    resetTest(true);
+                });
+                dom.subOptions.appendChild(btn);
+            });
+        }
+
+        // ==========================================
+        // 7. CORE TYPING & TIMING LOGIC
+        // ==========================================
+        function startSession() {
+            if (state.isRunning || state.isFinished) return;
+            state.isRunning = true;
+            state.startTime = performance.now();
+            dom.smoothCaret.classList.remove('caret-blink');
+
+            if (state.modeType === 'time') {
+                state.timeRemaining = state.timeOption;
+                state.timerInterval = setInterval(() => {
+                    const elapsedSec = Math.floor((performance.now() - state.startTime) / 1000);
+                    state.timeRemaining = Math.max(0, state.timeOption - elapsedSec);
+                    dom.metricTimer.textContent = state.timeRemaining;
+                    updateLiveMetrics();
+
+                    if (state.timeRemaining <= 0) {
+                        finishTest();
+                    }
+                }, 200);
+            } else {
+                // Stopwatch mode for Word/Length mode
+                state.timerInterval = setInterval(() => {
+                    const elapsedSec = Math.floor((performance.now() - state.startTime) / 1000);
+                    dom.metricTimer.textContent = elapsedSec;
+                    updateLiveMetrics();
+                }, 250);
+            }
+        }
+
+        function processCharacterInput(char) {
+            if (state.isFinished) return;
+            if (!state.isRunning) startSession();
+
+            const expectedChar = state.targetText[state.cursorIndex];
+            if (expectedChar === undefined) return;
+
+            const isCorrect = char === expectedChar;
+            const span = state.charSpans[state.cursorIndex];
+
+            state.totalKeystrokes++;
+            if (isCorrect) {
+                state.correctKeystrokes++;
+                span.className = 'char char-correct';
+                sound.playKey(false);
+            } else {
+                state.errorCount++;
+                span.className = 'char char-incorrect';
+                sound.playKey(true);
+            }
+
+            state.typedHistory[state.cursorIndex] = isCorrect;
+            state.cursorIndex++;
+
+            updateCaretPosition();
+            updateLiveMetrics();
+
+            // Check if passage completed
+            if (state.cursorIndex >= state.targetText.length) {
+                if (state.modeType === 'time' && state.timeRemaining > 0) {
+                    // Append more text seamlessly in time mode so user never runs out
+                    appendMorePassage();
+                } else {
+                    finishTest();
+                }
+            }
+        }
+
+        function appendMorePassage() {
+            const oldText = state.targetText;
+            let extra = '';
+            if (state.category === 'words') {
+                const words = [];
+                for (let i = 0; i < 25; i++) {
+                    words.push(COMMON_WORDS[Math.floor(Math.random() * COMMON_WORDS.length)]);
+                }
+                extra = ' ' + words.join(' ');
+            } else if (state.category === 'quotes') {
+                extra = ' ' + ENGLISH_QUOTES[Math.floor(Math.random() * ENGLISH_QUOTES.length)];
+            } else {
+                const snip = CODE_SNIPPETS[Math.floor(Math.random() * CODE_SNIPPETS.length)];
+                extra = ' ' + snip.code;
+            }
+
+            state.targetText = oldText + extra;
+            const fragment = document.createDocumentFragment();
+            for (let i = oldText.length; i < state.targetText.length; i++) {
+                const span = document.createElement('span');
+                span.textContent = state.targetText[i];
+                span.className = 'char char-untyped';
+                fragment.appendChild(span);
+                state.charSpans.push(span);
+            }
+            dom.wordsDisplay.appendChild(fragment);
+            updateCaretPosition();
+        }
+
+        function processBackspace() {
+            if (state.isFinished || state.cursorIndex === 0) return;
+            state.cursorIndex--;
+            const span = state.charSpans[state.cursorIndex];
+            span.className = 'char char-untyped';
+            state.typedHistory[state.cursorIndex] = undefined;
+            sound.playKey(false);
+            updateCaretPosition();
+            updateLiveMetrics();
+        }
+
+        function updateLiveMetrics() {
+            const now = performance.now();
+            const elapsedMinutes = state.startTime ? Math.max((now - state.startTime) / 60000, 0.008) : 0;
+
+            // Count currently valid characters on screen
+            let validCharsOnScreen = 0;
+            for (let i = 0; i < state.cursorIndex; i++) {
+                if (state.typedHistory[i] === true) validCharsOnScreen++;
+            }
+
+            // Standard WPM formula: (Correct Characters / 5) / Minutes
+            const netWpm = elapsedMinutes > 0 ? Math.round((validCharsOnScreen / 5) / elapsedMinutes) : 0;
+            const acc = state.totalKeystrokes > 0
+                ? Math.max(0, Math.round((state.correctKeystrokes / state.totalKeystrokes) * 100))
+                : 100;
+
+            dom.metricWpm.textContent = isFinite(netWpm) ? netWpm : 0;
+            dom.metricAcc.textContent = acc;
+            dom.metricChars.textContent = state.cursorIndex;
+            dom.metricErrors.textContent = state.errorCount;
+
+            // Update Progress Bar
+            let progressPct = 0;
+            if (state.modeType === 'time') {
+                progressPct = ((state.timeOption - state.timeRemaining) / state.timeOption) * 100;
+            } else {
+                progressPct = (state.cursorIndex / Math.max(1, state.targetText.length)) * 100;
+            }
+            dom.progressBar.style.width = `${Math.min(100, Math.max(0, progressPct))}%`;
+        }
+
+        function finishTest() {
+            if (state.isFinished) return;
+            state.isFinished = true;
+            state.isRunning = false;
+
+            clearInterval(state.timerInterval);
+            stopAutoTypeLoop();
+            dom.smoothCaret.classList.add('caret-blink');
+            dom.progressBar.style.width = '100%';
+            sound.playComplete();
+
+            // Final calculations
+            const elapsedMinutes = state.startTime
+                ? Math.max((performance.now() - state.startTime) / 60000, 0.01)
+                : 0.01;
+
+            let validChars = 0;
+            for (let i = 0; i < state.cursorIndex; i++) {
+                if (state.typedHistory[i] === true) validChars++;
+            }
+
+            const netWpm = Math.round((validChars / 5) / elapsedMinutes);
+            const rawWpm = Math.round((state.totalKeystrokes / 5) / elapsedMinutes);
+            const acc = state.totalKeystrokes > 0
+                ? Math.round((state.correctKeystrokes / state.totalKeystrokes) * 100)
+                : 100;
+
+            dom.resWpm.textContent = isFinite(netWpm) ? netWpm : 0;
+            dom.resRaw.textContent = isFinite(rawWpm) ? rawWpm : 0;
+            dom.resAcc.textContent = `${acc}%`;
+            dom.resChars.textContent = `${state.cursorIndex} / ${state.errorCount}`;
+            dom.resultModeTag.textContent = state.autoTypeActive
+                ? `Auto Type Demo (${state.autoWpm} WPM)`
+                : `${state.category.toUpperCase()} • ${state.modeType === 'time' ? state.timeOption + 's' : state.wordCountOption + ' words'}`;
+
+            dom.resultsModal.classList.remove('hidden');
+
+            // Handle Auto-Next feature if toggled on
+            if (state.autoNextActive) {
+                let countdown = 3;
+                dom.autoNextCountdown.textContent = countdown;
+                dom.autoNextBanner.classList.remove('hidden');
+
+                clearInterval(state.autoNextCountdownTimer);
+                state.autoNextCountdownTimer = setInterval(() => {
+                    countdown--;
+                    dom.autoNextCountdown.textContent = countdown;
+                    if (countdown <= 0) {
+                        clearInterval(state.autoNextCountdownTimer);
+                        dom.resultsModal.classList.add('hidden');
+                        resetTest(true);
+                        if (state.autoTypeActive) {
+                            startAutoTypeLoop();
+                        }
+                    }
+                }, 1000);
+            } else {
+                dom.autoNextBanner.classList.add('hidden');
+            }
+        }
+
+        function resetTest(generateNew = true) {
+            clearInterval(state.timerInterval);
+            clearInterval(state.autoNextCountdownTimer);
+            stopAutoTypeLoop();
+
+            state.isRunning = false;
+            state.isFinished = false;
+            state.startTime = null;
+            state.cursorIndex = 0;
+            state.typedHistory = [];
+            state.totalKeystrokes = 0;
+            state.correctKeystrokes = 0;
+            state.errorCount = 0;
+
+            dom.resultsModal.classList.add('hidden');
+            dom.autoNextBanner.classList.add('hidden');
+            dom.progressBar.style.width = '0%';
+            dom.smoothCaret.classList.add('caret-blink');
+
+            // Reset Metrics Display
+            dom.metricWpm.textContent = '0';
+            dom.metricAcc.textContent = '100';
+            dom.metricChars.textContent = '0';
+            dom.metricErrors.textContent = '0';
+
+            if (state.modeType === 'time') {
+                state.timeRemaining = state.timeOption;
+                dom.metricTimerTitle.textContent = 'TIME LEFT (剩餘時間)';
+                dom.metricTimer.textContent = state.timeOption;
+                dom.metricTimerUnit.textContent = 's';
+            } else {
+                dom.metricTimerTitle.textContent = 'ELAPSED (已用時間)';
+                dom.metricTimer.textContent = '0';
+                dom.metricTimerUnit.textContent = 's';
+            }
+
+            if (generateNew || !state.targetText) {
+                generatePassage();
+            }
+            renderCharacters();
+            focusTypingInput();
+
+            // If Auto-Type mode is toggled on, begin automatically after brief pause
+            if (state.autoTypeActive) {
+                startAutoTypeLoop();
+            }
+        }
+
+        // ==========================================
+        // 8. AUTO-TYPE BOT ENGINE
+        // ==========================================
+        function toggleAutoType(forceState = null) {
+            state.autoTypeActive = forceState !== null ? forceState : !state.autoTypeActive;
+
+            if (state.autoTypeActive) {
+                dom.autoBotDot.classList.remove('bg-slate-400');
+                dom.autoBotDot.classList.add('bg-yellow-400');
+                dom.autoBotPing.classList.remove('hidden');
+                dom.badgeLiveMode.textContent = `Auto ${state.autoWpm} WPM`;
+                dom.badgeLiveMode.className = 'px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-yellow-500/20 text-yellow-500';
+                
+                if (state.isFinished) {
+                    resetTest(true);
+                } else {
+                    startAutoTypeLoop();
+                }
+            } else {
+                stopAutoTypeLoop();
+                dom.autoBotDot.classList.add('bg-slate-400');
+                dom.autoBotDot.classList.remove('bg-yellow-400');
+                dom.autoBotPing.classList.add('hidden');
+                dom.badgeLiveMode.textContent = 'Manual';
+                dom.badgeLiveMode.className = 'px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-slate-100 dark:bg-darkBg text-slate-500';
+            }
+        }
+
+        function startAutoTypeLoop() {
+            stopAutoTypeLoop();
+            if (!state.autoTypeActive || state.isFinished) return;
+
+            const scheduleNextKey = () => {
+                if (!state.autoTypeActive || state.isFinished) return;
+
+                const nextChar = state.targetText[state.cursorIndex];
+                if (nextChar !== undefined) {
+                    processCharacterInput(nextChar);
+                }
+
+                if (!state.isFinished && state.autoTypeActive) {
+                    // Calculate interval in ms: 1 word = 5 chars => charsPerMin = WPM * 5
+                    const baseDelayMs = 60000 / (state.autoWpm * 5);
+                    // Add realistic human-like micro jitter (+/- 15%)
+                    const jitter = baseDelayMs * (0.85 + Math.random() * 0.3);
+                    state.autoTypeTimer = setTimeout(scheduleNextKey, jitter);
+                }
+            };
+
+            state.autoTypeTimer = setTimeout(scheduleNextKey, 250);
+        }
+
+        function stopAutoTypeLoop() {
+            if (state.autoTypeTimer) {
+                clearTimeout(state.autoTypeTimer);
+                state.autoTypeTimer = null;
+            }
+        }
+
+        function toggleAutoNext() {
+            state.autoNextActive = !state.autoNextActive;
+            if (state.autoNextActive) {
+                dom.autoNextDot.classList.remove('bg-slate-400');
+                dom.autoNextDot.classList.add('bg-emerald-500');
+                dom.btnAutoNext.classList.add('border-emerald-500/60', 'text-emerald-600', 'dark:text-emerald-400');
+            } else {
+                dom.autoNextDot.classList.add('bg-slate-400');
+                dom.autoNextDot.classList.remove('bg-emerald-500');
+                dom.btnAutoNext.classList.remove('border-emerald-500/60', 'text-emerald-600', 'dark:text-emerald-400');
+                clearInterval(state.autoNextCountdownTimer);
+                dom.autoNextBanner.classList.add('hidden');
+            }
+        }
+
+        // ==========================================
+        // 9. EVENT LISTENERS & FOCUS MANAGEMENT
+        // ==========================================
+        function focusTypingInput() {
+            dom.hiddenInput.focus();
+            dom.focusOverlay.classList.add('hidden');
+        }
+
+        dom.typingContainer.addEventListener('click', () => {
+            focusTypingInput();
+        });
+
+        dom.hiddenInput.addEventListener('focus', () => {
+            dom.focusOverlay.classList.add('hidden');
+        });
+
+        dom.hiddenInput.addEventListener('blur', () => {
+            // Show subtle blur overlay only if user was manually typing mid-test
+            if (!state.isFinished && !state.autoTypeActive && dom.resultsModal.classList.contains('hidden')) {
+                dom.focusOverlay.classList.remove('hidden');
+            }
+        });
+
+        // Capture physical keyboard keys (Backspace, Tab, Escape)
+        dom.hiddenInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Tab') {
+                e.preventDefault();
+                resetTest(false);
+                return;
+            }
+            if (e.key === 'Escape') {
+                if (state.autoTypeActive) {
+                    toggleAutoType(false);
+                }
+                return;
+            }
+            if (e.key === 'Backspace') {
+                e.preventDefault();
+                if (state.autoTypeActive) toggleAutoType(false); // Manual override stops auto
+                processBackspace();
+                return;
+            }
+        });
+
+        // Capture printable characters across desktop & mobile IMEs
+        dom.hiddenInput.addEventListener('input', (e) => {
+            const val = dom.hiddenInput.value;
+            dom.hiddenInput.value = ''; // Always clear hidden input
+
+            if (!val) return;
+            if (state.autoTypeActive) toggleAutoType(false); // Manual typing takes over
+
+            for (const ch of val) {
+                processCharacterInput(ch);
+            }
+        });
+
+        // Global shortcut so pressing any key while overlay is visible focuses immediately
+        document.addEventListener('keydown', (e) => {
+            if (!dom.resultsModal.classList.contains('hidden')) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    resetTest(true);
+                }
+                return;
+            }
+            if (document.activeElement !== dom.hiddenInput &&
+                document.activeElement !== dom.autoWpmSlider &&
+                e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
+                focusTypingInput();
+            }
+        });
+
+        // Category Selection Buttons
+        dom.catBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                dom.catBtns.forEach(b => {
+                    b.classList.remove('bg-yellow-500', 'text-slate-950', 'shadow-sm');
+                    b.classList.add('text-slate-600', 'dark:text-slate-400');
+                });
+                btn.classList.add('bg-yellow-500', 'text-slate-950', 'shadow-sm');
+                btn.classList.remove('text-slate-600', 'dark:text-slate-400');
+
+                state.category = btn.dataset.category;
+                resetTest(true);
+            });
+        });
+
+        // Mode Type Buttons (Time vs Length)
+        dom.modeTypeBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                dom.modeTypeBtns.forEach(b => {
+                    b.classList.remove('text-yellow-500', 'bg-yellow-500/10');
+                    b.classList.add('text-slate-500');
+                });
+                btn.classList.add('text-yellow-500', 'bg-yellow-500/10');
+                btn.classList.remove('text-slate-500');
+
+                state.modeType = btn.dataset.mode;
+                renderSubOptions();
+                resetTest(true);
+            });
+        });
+
+        // Auto Type Toggle & WPM Slider
+        dom.btnAutoType.addEventListener('click', () => toggleAutoType());
+        dom.autoWpmSlider.addEventListener('input', (e) => {
+            state.autoWpm = parseInt(e.target.value, 10);
+            dom.autoWpmLabel.textContent = state.autoWpm;
+            if (state.autoTypeActive) {
+                dom.badgeLiveMode.textContent = `Auto ${state.autoWpm} WPM`;
+            }
+        });
+
+        // Auto-Next Toggle
+        dom.btnAutoNext.addEventListener('click', toggleAutoNext);
+        dom.btnCancelAutonext.addEventListener('click', () => {
+            clearInterval(state.autoNextCountdownTimer);
+            dom.autoNextBanner.classList.add('hidden');
+        });
+
+        // Sound Toggle
+        dom.btnSound.addEventListener('click', () => {
+            sound.enabled = !sound.enabled;
+            dom.iconSoundOn.classList.toggle('hidden', !sound.enabled);
+            dom.iconSoundOff.classList.toggle('hidden', sound.enabled);
+            if (sound.enabled) sound.playKey(false);
+        });
+
+        // Theme Toggle
+        dom.btnTheme.addEventListener('click', () => {
+            document.documentElement.classList.toggle('dark');
+            requestAnimationFrame(() => updateCaretPosition());
+        });
+
+        // Restart & Next Controls
+        dom.btnRestart.addEventListener('click', (e) => {
+            e.stopPropagation();
+            resetTest(false);
+        });
+
+        dom.btnNextPassage.addEventListener('click', (e) => {
+            e.stopPropagation();
+            resetTest(true);
+        });
+
+        dom.btnModalRestart.addEventListener('click', () => resetTest(false));
+        dom.btnModalNext.addEventListener('click', () => resetTest(true));
+
+        // Recalculate caret position on window resize
+        window.addEventListener('resize', () => {
+            updateCaretPosition();
+        });
+
+        // ==========================================
+        // 10. INITIALIZE APP ON LOAD
+        // ==========================================
+        window.addEventListener('DOMContentLoaded', () => {
+            renderSubOptions();
+            resetTest(true);
+        });
+    </script>
+</body>
+</html>
